@@ -1,19 +1,32 @@
-name: CI # Название workflow
+name: Weekly Data Update
 
-on: # Триггеры
-  push: # При пуше в репозиторий
-    branches: [main]
-  pull_request: # При пулл-реквесте
-    branches: [main]
-  schedule: # По расписанию (каждый понедельник в 00:00 UTC)
-    - cron: "0 0 * * 1"
+on:
+  schedule:
+    - cron: "0 0 * * 1" # Каждый понедельник в 00:00 UTC
+  workflow_dispatch: # Разрешает ручной запуск
 
-jobs: # Задачи
-  build:
-    runs-on: ubuntu-latest # ОС для запуска
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
 
-    steps: # Шаги
-      - uses: actions/checkout@v4 # Клонирует репозиторий
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Run a script
-        run: echo "Hello, GitHub Actions!"
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: npm install axios # Если нужны дополнительные пакеты
+
+      - name: Run update script
+        run: node scripts/update_data.js
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add docs/data.json
+          git commit -m "Auto-update data: $(date +'%Y-%m-%d')"
+          git push

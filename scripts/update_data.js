@@ -25,7 +25,10 @@ async function updateData() {
   const technologies = await analyzeTechnologies(vacancies);
 
   return {
-    updatedAt: new Date().toISOString(),
+    updatedAt: new Date().toLocaleString("ru-RU", {
+      timeZone: "Europe/Moscow",
+      hour12: false,
+    }),
     source: "hh.ru",
     technologies: Object.entries(technologies)
       .map(([name, count]) => ({ name, count }))
