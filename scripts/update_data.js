@@ -1,35 +1,42 @@
+const axios = require("axios");
 const fs = require("fs");
-const path = require("path");
 
-// Функция для сбора данных (замените на свою логику)
-async function fetchData() {
-  // Пример: здесь можно сделать запрос к API вакансий
+async function fetchVacancies() {
+  const response = await axios.get(
+    "https://api.hh.ru/vacancies?text=JavaScript"
+  );
+  return response.data.items.slice(0, 10); // Берем первые 10 вакансий
+}
+
+async function analyzeTechnologies(vacancies) {
+  // Простой анализ технологий (реальная логика будет сложнее)
+  const techs = {};
+  vacancies.forEach((v) => {
+    const skills = v.skills?.map((s) => s.name.toLowerCase()) || [];
+    skills.forEach((skill) => {
+      techs[skill] = (techs[skill] || 0) + 1;
+    });
+  });
+  return techs;
+}
+
+async function updateData() {
+  const vacancies = await fetchVacancies();
+  const technologies = await analyzeTechnologies(vacancies);
+
   return {
-    lastUpdated: new Date().toISOString(),
-    technologies: [
-      { name: "JavaScript", count: 125 },
-      { name: "TypeScript", count: 87 },
-      { name: "Python", count: 92 },
-    ],
-    stats: {
-      total: 304,
-      updatedAt: new Date().toLocaleString("ru-RU"),
-    },
+    updatedAt: new Date().toISOString(),
+    source: "hh.ru",
+    technologies: Object.entries(technologies)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count),
   };
 }
 
-// Основная функция
-async function main() {
-  try {
-    const data = await fetchData();
-    const outputPath = path.join(__dirname, "../docs/data.json");
-
-    fs.writeFileSync(outputPath, JSON.stringify(data, null, 2));
-    console.log("Данные успешно обновлены!");
-  } catch (error) {
-    console.error("Ошибка при обновлении данных:", error);
-    process.exit(1);
-  }
-}
-
-main();
+// Запуск и сохранение
+updateData()
+  .then((data) => {
+    fs.writeFileSync("docs/data.json", JSON.stringify(data, null, 2));
+    console.log("Data updated successfully!");
+  })
+  .catch(console.error);
