@@ -1,0 +1,19 @@
+name: CI # Название workflow
+
+on: # Триггеры
+  push: # При пуше в репозиторий
+    branches: [main]
+  pull_request: # При пулл-реквесте
+    branches: [main]
+  schedule: # По расписанию (каждый понедельник в 00:00 UTC)
+    - cron: "0 0 * * 1"
+
+jobs: # Задачи
+  build:
+    runs-on: ubuntu-latest # ОС для запуска
+
+    steps: # Шаги
+      - uses: actions/checkout@v4 # Клонирует репозиторий
+
+      - name: Run a script
+        run: echo "Hello, GitHub Actions!"
