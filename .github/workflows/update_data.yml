@@ -33,7 +33,7 @@ jobs:
           git config --global user.email "actions@github.com"
           git add --all
           if ! git diff --staged --quiet; then
-            git commit -m "Auto-update data: $(date +'%Y-%m-%d')"
+            git commit -m "Auto-update  $(date +'%Y-%m-%d')"
             git pull --rebase origin main
             git push origin main
             echo "status=success" >> $GITHUB_OUTPUT
@@ -75,7 +75,7 @@ jobs:
             DETAILS="Статус: ${{ job.status }}"
           fi
           
-          # Используем HTML parse mode, который не требует экранирования большинства символов
+          # Используем HTML parse mode
           MESSAGE="$STATUS_EMOJI GitHub Action завершён
 
           📅 Время: $(date +'%Y-%m-%d %H:%M:%S UTC')
@@ -87,7 +87,7 @@ jobs:
           📝 Детали: $DETAILS
           🔗 Ссылка: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # Экранируем только & < > для HTML
+          # Экранируем символы для HTML
           ESCAPED_MESSAGE=$(printf '%s\n' "$MESSAGE" | sed 's/&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g')
           
           # Отправляем в Telegram с HTML parse mode
@@ -101,4 +101,6 @@ jobs:
           else
             echo "❌ Не удалось отправить уведомление в Telegram"
             echo "Response: $RESPONSE"
+            # Завершаем с ошибкой, чтобы весь job пометился как failed
+            exit 1
           fi
