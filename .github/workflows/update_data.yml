@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Разрешает ручной запуск
 
 jobs:
-  update-
+  update-data:
     runs-on: ubuntu-latest
     permissions:
       contents: write # Даёт право на git push
