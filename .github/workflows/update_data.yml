@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Разрешает ручной запуск
 
 jobs:
-  update-data:
+  update-
     runs-on: ubuntu-latest
     permissions:
       contents: write # Даёт право на git push
@@ -57,9 +57,9 @@ jobs:
             
             # Проверяем, были ли изменения
             if [[ "${{ steps.commit_push.outputs.changes }}" == "committed" ]]; then
-              DETAILS="$DETAILS \- файлы обновлены и отправлены"
+              DETAILS="$DETAILS - файлы обновлены и отправлены"
             else
-              DETAILS="$DETAILS \- данные проверены, изменений не было"
+              DETAILS="$DETAILS - данные проверены, изменений не было"
             fi
           elif [[ "${{ job.status }}" == "failure" ]]; then
             STATUS_EMOJI="❌"
@@ -75,12 +75,25 @@ jobs:
             DETAILS="Статус: ${{ job.status }}"
           fi
           
-          MESSAGE="$STATUS_EMOJI GitHub Action завершён\n\n📅 Время: $(date +'%Y\-m\-d %H:%M:%S UTC')\n🏷️ Репозиторий: ${{ github.repository }}\n🏷️ Ветка: ${{ github.ref_name }}\n👤 Запуск: ${{ github.actor }}\n\n📊 Статус: $STATUS_TEXT\n📝 Детали: $DETAILS\n🔗 Ссылка: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # Используем HTML parse mode, который не требует экранирования большинства символов
+          MESSAGE="$STATUS_EMOJI GitHub Action завершён
+
+          📅 Время: $(date +'%Y-%m-%d %H:%M:%S UTC')
+          🏷️ Репозиторий: ${{ github.repository }}
+          🏷️ Ветка: ${{ github.ref_name }}
+          👤 Запуск: ${{ github.actor }}
+
+          📊 Статус: $STATUS_TEXT
+          📝 Детали: $DETAILS
+          🔗 Ссылка: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # Отправляем в Telegram
+          # Экранируем только & < > для HTML
+          ESCAPED_MESSAGE=$(printf '%s\n' "$MESSAGE" | sed 's/&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g')
+          
+          # Отправляем в Telegram с HTML parse mode
           RESPONSE=$(curl -s -X POST \
             "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
-            -d "chat_id=$TELEGRAM_CHAT_ID&text=$MESSAGE&parse_mode=MarkdownV2")
+            -d "chat_id=$TELEGRAM_CHAT_ID&text=$ESCAPED_MESSAGE&parse_mode=HTML")
           
           # Проверяем успешность отправки
           if echo "$RESPONSE" | jq -e '.ok' >/dev/null 2>&1; then
